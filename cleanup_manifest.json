@@ -1,0 +1,56 @@
+[
+  {
+    "originalPath": "Luxury_doors_opening_penthouse_i._202606221408.mp4",
+    "fileSizeBytes": 10185919,
+    "deletionReason": "Duplicate of public/intro.mp4",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/Luxury_doors_opening_penthouse_i._202606221408.mp4"
+  },
+  {
+    "originalPath": "src/assets/hero.png",
+    "fileSizeBytes": 13057,
+    "deletionReason": "Never imported or referenced in code",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/assets/hero.png"
+  },
+  {
+    "originalPath": "src/assets/react.svg",
+    "fileSizeBytes": 4126,
+    "deletionReason": "Default template asset, unused",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/assets/react.svg"
+  },
+  {
+    "originalPath": "src/assets/vite.svg",
+    "fileSizeBytes": 8709,
+    "deletionReason": "Default template asset, unused",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/assets/vite.svg"
+  },
+  {
+    "originalPath": "src/pages/VendorsPage.tsx",
+    "fileSizeBytes": 7663,
+    "deletionReason": "Page is unrouted and never imported",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/pages/VendorsPage.tsx"
+  },
+  {
+    "originalPath": "src/components/dashboard/ExecutiveDashboard.tsx",
+    "fileSizeBytes": 43690,
+    "deletionReason": "Unused component. Active dashboard logic is inline in src/pages/DashboardPage.tsx",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/components/dashboard/ExecutiveDashboard.tsx"
+  },
+  {
+    "originalPath": "src/components/ui/SearchCenter.tsx",
+    "fileSizeBytes": 30168,
+    "deletionReason": "Component is never imported or rendered",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/components/ui/SearchCenter.tsx"
+  },
+  {
+    "originalPath": "src/components/ui/CommandMenu.tsx",
+    "fileSizeBytes": 8551,
+    "deletionReason": "Component is never imported or rendered",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/components/ui/CommandMenu.tsx"
+  },
+  {
+    "originalPath": "src/services/commsService.ts",
+    "fileSizeBytes": 1257,
+    "deletionReason": "Unused mock service; active communications use supabaseService.ts",
+    "backupLocation": "PROJECT_BACKUP_BEFORE_CLEANUP/src/services/commsService.ts"
+  }
+]

@@ -4,10 +4,27 @@ import {
   Sliders, 
   FileText, 
   Send, 
-  Percent,
   Activity,
   ShieldAlert,
-  Bot
+  Bot,
+  Hammer,
+  Palette,
+  Layers,
+  Feather,
+  TrendingUp,
+  AlertTriangle,
+  ArrowRight,
+  Sparkles,
+  ClipboardCheck,
+  Compass,
+  Cpu,
+  BadgeAlert,
+  CheckCircle2,
+  DollarSign,
+  ChevronDown,
+  ChevronUp,
+  Inbox,
+  UserCheck
 } from 'lucide-react';
 import { useCRM } from '../context/CRMContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -25,6 +42,260 @@ export const AIDesignDirectorPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [generatedDraft, setGeneratedDraft] = useState<string>('');
   const [customResponse, setCustomResponse] = useState<string>('');
+  const [showParams, setShowParams] = useState<boolean>(false);
+
+  const parsed = useMemo(() => {
+    if (!customResponse) return null;
+    
+    const lines = customResponse.split('\n');
+    const items: { label: string; value: string; detail?: string }[] = [];
+    let title = '';
+
+    const firstNonEmpty = lines.find(l => l.trim().length > 0);
+    if (firstNonEmpty && !firstNonEmpty.startsWith('•') && !firstNonEmpty.startsWith('-')) {
+      title = firstNonEmpty.replace(/\*\*/g, '').trim();
+    }
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+        const cleaned = trimmed.replace(/^[•-]\s*/, '');
+        const colonIndex = cleaned.indexOf(':');
+        if (colonIndex !== -1) {
+          const label = cleaned.substring(0, colonIndex).replace(/\*\*/g, '').trim();
+          const valueStr = cleaned.substring(colonIndex + 1).trim();
+          
+          let value = valueStr.replace(/\*\*/g, '');
+          let detail = '';
+          
+          const boldMatches = valueStr.match(/\*\*(.*?)\*\*/g);
+          if (boldMatches && boldMatches.length > 0) {
+            const boldText = boldMatches[0].replace(/\*\*/g, '');
+            if (boldText.includes('/') || boldText.toLowerCase() === 'feasible') {
+              value = boldText;
+              detail = valueStr.replace(boldMatches[0], '').trim();
+            }
+          }
+
+          items.push({ label, value, detail });
+        } else {
+          items.push({ label: '', value: cleaned.replace(/\*\*/g, '').trim() });
+        }
+      }
+    });
+
+    if (items.length === 0) {
+      return { type: 'plain' as const, title, items: [] };
+    }
+
+    const hasMaterials = items.some(i => 
+      i.label.toLowerCase().includes('flooring') || 
+      i.label.toLowerCase().includes('woodwork') || 
+      i.label.toLowerCase().includes('metals') || 
+      i.label.toLowerCase().includes('fabrics')
+    );
+
+    const hasFinancial = items.some(i => 
+      i.label.toLowerCase().includes('feasibility') || 
+      i.label.toLowerCase().includes('health') || 
+      i.label.toLowerCase().includes('recommendation')
+    );
+
+    let type: 'materials' | 'financial' | 'general' = 'general';
+    if (hasMaterials) type = 'materials';
+    else if (hasFinancial) type = 'financial';
+
+    return { type, title, items };
+  }, [customResponse]);
+
+  const renderAIResponse = () => {
+    if (isAnalyzing) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10 space-y-4 font-mono text-xs text-[#CBBEAB]/70">
+          <div className="relative">
+            <div className="h-10 w-10 rounded-full border-2 border-[#D4A65A]/20 border-t-[#D4A65A] animate-spin" />
+            <Sparkles className="h-4 w-4 text-[#D4A65A] absolute top-3 left-3 animate-pulse" />
+          </div>
+          <div className="space-y-1 text-center">
+            <p className="font-bold tracking-widest uppercase text-[10px] text-[#E6C27A]">Initializing Neural Core</p>
+            <p className="text-[9px] text-slate-500">Streaming recommendations matrix...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!parsed) return null;
+
+    const getMaterialIcon = (label: string) => {
+      const l = label.toLowerCase();
+      if (l.includes('flooring')) return <Compass className="h-5 w-5 text-[#D4A65A]" />;
+      if (l.includes('woodwork')) return <Hammer className="h-5 w-5 text-[#D4A65A]" />;
+      if (l.includes('metals')) return <Layers className="h-5 w-5 text-[#D4A65A]" />;
+      if (l.includes('fabrics')) return <Feather className="h-5 w-5 text-[#D4A65A]" />;
+      return <Sparkles className="h-5 w-5 text-[#D4A65A]" />;
+    };
+
+    const getFinancialIcon = (label: string) => {
+      const l = label.toLowerCase();
+      if (l.includes('feasibility')) return <ClipboardCheck className="h-5 w-5 text-[#9BCF8A]" />;
+      if (l.includes('health') || l.includes('score')) return <DollarSign className="h-5 w-5 text-[#E6C27A]" />;
+      if (l.includes('recommendation')) return <Sparkles className="h-5 w-5 text-[#D4A65A]" />;
+      return <Activity className="h-5 w-5 text-[#D4A65A]" />;
+    };
+
+    return (
+      <div className="space-y-6 text-left">
+        {/* Response Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D4A65A]/15 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9BCF8A] animate-pulse" />
+              <span className="text-[9px] font-mono tracking-widest text-[#8B7355] uppercase font-bold">Neural Output Sourced</span>
+            </div>
+            <h4 className="text-lg font-serif text-[#E6C27A] mt-1">{parsed.title || 'Director Briefing Analysis'}</h4>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#D4A65A]/10 border border-[#D4A65A]/25 text-[9px] font-mono text-[#E6C27A] font-semibold">
+              <CheckCircle2 className="h-3 w-3 text-[#9BCF8A]" /> CONFIDENCE: 98.4%
+            </span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-mono text-[#CBBEAB]">
+              <Cpu className="h-3 w-3 text-[#D4A65A]" /> MODEL: GS-GPT-4o
+            </span>
+          </div>
+        </div>
+
+        {parsed.type === 'materials' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {parsed.items.map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1, duration: 0.4 }}
+              >
+                <GlassCard 
+                  hoverEffect={true} 
+                  className="p-5 bg-gradient-to-br from-[#12100E]/70 to-[#171717]/40 border-[#D4A65A]/20 hover:border-[#D4A65A]/45 transition-all duration-300 rounded-2xl h-full flex flex-col justify-between shadow-soft-luxe"
+                >
+                  <div className="flex items-center justify-between border-b border-[#D4A65A]/10 pb-3 mb-3">
+                    <span className="text-[10px] font-mono tracking-wider text-[#CBBEAB]/80 uppercase font-semibold">{item.label}</span>
+                    <div className="p-2 rounded-xl bg-[#D4A65A]/5 border border-[#D4A65A]/15 shrink-0">
+                      {getMaterialIcon(item.label)}
+                    </div>
+                  </div>
+                  <p className="text-xs font-light leading-relaxed text-[#F5F1EA] font-display">
+                    {item.value}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {parsed.type === 'financial' && (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+            {parsed.items.map((item, idx) => {
+              const isRec = item.label.toLowerCase().includes('recommendation');
+              if (isRec) {
+                return (
+                  <motion.div
+                    key={idx}
+                    className="md:col-span-12"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                  >
+                    <GlassCard 
+                      hoverEffect={false} 
+                      className="p-5 bg-[#141414]/80 border-[#D4A65A]/25 rounded-2xl shadow-soft-luxe"
+                    >
+                      <div className="flex items-center gap-2 border-b border-[#D4A65A]/10 pb-3 mb-3">
+                        <div className="p-2 rounded-xl bg-[#D4A65A]/5 border border-[#D4A65A]/15 shrink-0">
+                          {getFinancialIcon(item.label)}
+                        </div>
+                        <span className="text-[10px] font-mono tracking-wider text-[#E6C27A] uppercase font-semibold">{item.label}</span>
+                      </div>
+                      <p className="text-xs font-light leading-relaxed text-[#CBBEAB] font-display">
+                        {item.value}
+                      </p>
+                    </GlassCard>
+                  </motion.div>
+                );
+              }
+
+              return (
+                <motion.div
+                  key={idx}
+                  className="md:col-span-6"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1, duration: 0.4 }}
+                >
+                  <GlassCard 
+                    hoverEffect={true} 
+                    className="p-5 bg-[#12100E]/70 border-[#D4A65A]/15 hover:border-[#D4A65A]/35 transition-all duration-300 rounded-2xl h-full flex flex-col justify-between shadow-soft-luxe"
+                  >
+                    <div className="flex items-center justify-between border-b border-[#D4A65A]/10 pb-3 mb-3">
+                      <span className="text-[10px] font-mono tracking-wider text-[#CBBEAB]/80 uppercase font-semibold">{item.label}</span>
+                      <div className="p-2 rounded-xl bg-white/5 border border-white/10 shrink-0">
+                        {getFinancialIcon(item.label)}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-left">
+                      <h5 className="text-2xl font-serif font-bold text-white tracking-wide font-mono">{item.value}</h5>
+                      {item.detail && <p className="text-[10px] text-slate-500 mt-2 font-display leading-relaxed">{item.detail}</p>}
+                    </div>
+                  </GlassCard>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {parsed.type === 'general' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {parsed.items.map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1, duration: 0.4 }}
+              >
+                <GlassCard 
+                  hoverEffect={true} 
+                  className="p-5 bg-[#171717]/40 border-white/5 hover:border-[#D4A65A]/30 transition-all duration-300 rounded-2xl h-full flex flex-col justify-between shadow-soft-luxe"
+                >
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-3">
+                    <span className="text-[9.5px] font-mono tracking-wider text-[#CBBEAB]/70 uppercase font-semibold">{item.label || 'Insight'}</span>
+                    <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                      <Sparkles className="h-4 w-4 text-[#D4A65A]" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-light leading-relaxed text-[#F5F1EA] font-display">
+                    {item.value}
+                  </p>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {parsed.type === 'plain' && (
+          <div className="p-6 rounded-2xl border border-white/5 bg-[#141414]/30 text-xs leading-relaxed font-light text-[#CBBEAB] font-display whitespace-pre-line text-left shadow-soft-luxe">
+            {customResponse}
+          </div>
+        )}
+        
+        {/* Luxury separating details */}
+        <div className="pt-4 border-t border-[#D4A65A]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-[9.5px] text-slate-500 font-mono">
+          <span>SECURITY LEVEL: ENCRYPTED PROFILE</span>
+          <span className="flex items-center gap-1">
+            <Activity className="h-3 w-3 text-[#D4A65A]" /> REAL-TIME NEURAL DECISION STREAM
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   // Sourcing currently selected client details
   const activeClient = useMemo(() => {
@@ -202,9 +473,14 @@ export const AIDesignDirectorPage: React.FC = () => {
         
         {/* Selector and Client Summary bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-[#D4A65A]/10 pb-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-serif text-white">Focus Sourcing Client</h2>
-            <p className="text-[10px] text-[#A9A9A9]">Select an enquiry profile to feed the neural recommendation matrix.</p>
+          <div className="space-y-1 flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-[#141414] border border-[#D4A65A]/10 text-[#D4A65A] mt-1">
+              <UserCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-serif text-white">Focus Sourcing Client</h2>
+              <p className="text-[10px] text-[#A9A9A9] mt-0.5">Select an enquiry profile to feed the neural recommendation matrix.</p>
+            </div>
           </div>
 
           <div className="relative min-w-[260px]">
@@ -248,8 +524,8 @@ export const AIDesignDirectorPage: React.FC = () => {
                 {/* Conversion Prob */}
                 <GlassCard hoverEffect={true} className="p-6 bg-[#141414]/30 border-[#D4A65A]/10 shadow-soft-luxe text-center flex flex-col justify-between h-36">
                   <span className="text-[9px] tracking-widest text-[#A9A9A9] font-mono uppercase block">Conversion Probability</span>
-                  <div className="my-2 flex items-center justify-center text-[#D4A65A]">
-                    <Percent className="h-4.5 w-4.5 mr-0.5 text-[#D4A65A]" />
+                  <div className="my-2 flex items-center justify-center gap-1.5 text-[#D4A65A]">
+                    <TrendingUp className="h-5 w-5 text-[#9BCF8A]" />
                     <span className="text-4xl font-serif font-bold text-white font-mono">{metrics.probability}</span>
                     <span className="text-[#A9A9A9] text-sm">%</span>
                   </div>
@@ -260,7 +536,13 @@ export const AIDesignDirectorPage: React.FC = () => {
                 <GlassCard hoverEffect={true} className="p-6 bg-[#141414]/30 border-[#D4A65A]/10 shadow-soft-luxe text-center flex flex-col justify-between h-36">
                   <span className="text-[9px] tracking-widest text-[#A9A9A9] font-mono uppercase block">Sourcing Risk Profile</span>
                   <div className="my-2 flex items-center justify-center gap-2">
-                    <ShieldAlert className={`h-5.5 w-5.5 ${metrics.risk === 'High' ? 'text-[#C76B4F]' : metrics.risk === 'Medium' ? 'text-[#D4A65A]' : 'text-[#5D8A72]'}`} />
+                    {metrics.risk === 'High' ? (
+                      <BadgeAlert className="h-5.5 w-5.5 text-[#C76B4F]" />
+                    ) : metrics.risk === 'Medium' ? (
+                      <AlertTriangle className="h-5.5 w-5.5 text-[#D4A65A]" />
+                    ) : (
+                      <ShieldAlert className="h-5.5 w-5.5 text-[#5D8A72]" />
+                    )}
                     <span className="text-2xl font-serif font-bold text-white uppercase">{metrics.risk}</span>
                   </div>
                   <span className="text-[9px] text-[#A9A9A9]/60 font-light">Margins area coverage audit</span>
@@ -285,6 +567,52 @@ export const AIDesignDirectorPage: React.FC = () => {
                   <p className="text-xs text-[#A9A9A9] font-light leading-relaxed">
                     Style Preference focuses on **{activeClient.preferredStyle}**. Sourcing estimate lists gross square footage of {activeClient.sqFtArea || 'N/A'} Sq Ft.
                   </p>
+                  
+                  {/* Collapsible Sourcing Details Toggle */}
+                  <div className="border-t border-[#D4A65A]/10 pt-2 mt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setShowParams(!showParams)}
+                      className="flex items-center gap-1.5 text-[9.5px] font-mono text-[#D4A65A]/80 hover:text-[#D4A65A] transition-colors uppercase tracking-widest cursor-pointer outline-none"
+                    >
+                      <span>{showParams ? 'Hide Details' : 'Expand Sourcing Parameters'}</span>
+                      {showParams ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+
+                    <AnimatePresence>
+                      {showParams && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-[10px] text-[#A9A9A9]"
+                        >
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span>Project Type:</span>
+                            <span className="text-white font-medium">{activeClient.projectType}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span>Sourcing Scope:</span>
+                            <span className="text-white font-medium">{activeClient.sqFtArea ? `${activeClient.sqFtArea} Sq Ft` : 'Custom'}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span>Priority:</span>
+                            <span className={`font-semibold ${activeClient.priority === 'Urgent' ? 'text-[#C76B4F]' : 'text-white'}`}>
+                              {activeClient.priority}
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span>Est. Lead Time:</span>
+                            <span className="text-white font-medium">
+                              {activeClient.priority === 'Urgent' ? '4-6 Weeks' : '12-16 Weeks'}
+                            </span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   <div className="pt-2 flex gap-4">
                     <div className="px-3.5 py-1.5 rounded-lg bg-[#141414] border border-[#D4A65A]/10 text-[9px] text-[#A9A9A9] font-mono">
                       BUDGET: <span className="text-white font-bold">₹{activeClient.budget.toLocaleString()}</span>
@@ -297,43 +625,73 @@ export const AIDesignDirectorPage: React.FC = () => {
               </GlassCard>
 
               {/* Interactive Neural Director Input Assistant */}
-              <GlassCard hoverEffect={false} className="p-8 bg-[#141414]/30 border-[#D4A65A]/15 shadow-soft-luxe space-y-6">
-                <div className="flex items-center gap-2 border-b border-[#D4A65A]/10 pb-4">
-                  <Activity className="h-4 w-4 text-[#D4A65A] animate-pulse" />
-                  <h3 className="text-xs font-semibold text-white tracking-widest uppercase font-mono">Ask AI Design Director Assistant</h3>
+              <GlassCard hoverEffect={false} className="p-8 bg-[#111]/40 border-[#D4A65A]/15 shadow-soft-luxe space-y-6">
+                <div className="flex items-center justify-between border-b border-[#D4A65A]/10 pb-4">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-[#D4A65A] animate-pulse" />
+                    <h3 className="text-xs font-semibold text-white tracking-widest uppercase font-mono">AI Design Director Assistant</h3>
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest hidden sm:inline">Active Client Engine</span>
                 </div>
 
-                <form onSubmit={handlePromptSubmit} className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="e.g. 'Recommend materials' or 'Perform budget risk audit'..."
-                    className="flex-grow glass-input-premium-light text-xs bg-black/40 text-white focus:bg-black/80"
-                    value={aiPrompt}
-                    onChange={e => setAiPrompt(e.target.value)}
-                  />
-                  <Button type="submit" variant="gold" className="cursor-pointer px-6">
-                    Analyze <Send className="h-3 w-3 ml-1" />
-                  </Button>
+                <form onSubmit={handlePromptSubmit} className="flex flex-col sm:flex-row gap-4 items-stretch">
+                  <div className="relative flex-grow group">
+                    <input
+                      type="text"
+                      placeholder="e.g., 'Recommend materials', 'Perform budget risk audit'..."
+                      className="w-full text-xs bg-[#070707] text-white border border-[#D4A65A]/25 rounded-xl px-5 py-3.5 focus:border-[#D4A65A] focus:ring-1 focus:ring-[#D4A65A]/50 outline-none transition-all duration-300 group-hover:border-[#D4A65A]/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] focus:shadow-[0_0_20px_rgba(212,166,90,0.15)]"
+                      value={aiPrompt}
+                      onChange={e => setAiPrompt(e.target.value)}
+                    />
+                    <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-[#D4A65A]/5 to-[#E6C27A]/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 filter blur-xs" />
+                  </div>
+                  
+                  <button 
+                    type="submit"
+                    className="px-8 py-3.5 rounded-xl bg-gradient-to-br from-[#D4A65A] to-[#E6C27A] hover:from-[#E6C27A] hover:to-[#D4A65A] text-black font-semibold font-mono text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(212,166,90,0.2)] transition-all duration-300 hover:shadow-[0_4px_25px_rgba(212,166,90,0.35)] hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <span>Analyze Brief</span>
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
                 </form>
+
+                {/* Suggestions tray */}
+                <div className="flex flex-wrap gap-2 text-[10px] text-[#A9A9A9] font-mono pt-2">
+                  <span className="text-[#8B7355] self-center">SUGGESTIONS:</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setAiPrompt('Recommend design materials')} 
+                    className="px-2.5 py-1 rounded-md bg-[#141414] hover:bg-[#D4A65A]/10 border border-[#D4A65A]/10 hover:border-[#D4A65A]/30 text-[9.5px] transition-colors cursor-pointer outline-none"
+                  >
+                    Recommend Materials
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setAiPrompt('Perform budget risk audit')} 
+                    className="px-2.5 py-1 rounded-md bg-[#141414] hover:bg-[#D4A65A]/10 border border-[#D4A65A]/10 hover:border-[#D4A65A]/30 text-[9.5px] transition-colors cursor-pointer outline-none"
+                  >
+                    Budget Risk Audit
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setAiPrompt('Analyze design brief details')} 
+                    className="px-2.5 py-1 rounded-md bg-[#141414] hover:bg-[#D4A65A]/10 border border-[#D4A65A]/10 hover:border-[#D4A65A]/30 text-[9.5px] transition-colors cursor-pointer outline-none"
+                  >
+                    Style Brief Audit
+                  </button>
+                </div>
 
                 <AnimatePresence mode="wait">
                   {(isAnalyzing || customResponse) && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
+                      key={isAnalyzing ? 'analyzing' : 'response'}
+                      initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="p-5 rounded-2xl border border-[#D4A65A]/20 bg-[#1C1C1C]/80 text-xs leading-relaxed font-light text-[#A9A9A9] whitespace-pre-line relative text-left"
+                      transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+                      className="p-6 rounded-2xl border border-[#D4A65A]/20 bg-[#0c0a09]/90 relative text-left shadow-soft-luxe w-full"
                     >
-                      {isAnalyzing ? (
-                        <div className="flex items-center gap-2 text-[#A9A9A9] font-mono">
-                          <span className="h-2 w-2 rounded-full bg-[#D4A65A] animate-ping" />
-                          <span>Streaming neural recommendations matrix...</span>
-                        </div>
-                      ) : (
-                        <div className="text-white whitespace-pre-line">
-                          {customResponse}
-                        </div>
-                      )}
+                      {renderAIResponse()}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -355,8 +713,9 @@ export const AIDesignDirectorPage: React.FC = () => {
                     Generate instant draft templates based on the current workflow conversion stage (**{activeClient.status}**).
                   </p>
 
-                  <Button onClick={triggerFollowUpGeneration} variant="premium" className="w-full text-center text-xs cursor-pointer py-2.5">
-                    Draft Stage Correspondence
+                  <Button onClick={triggerFollowUpGeneration} variant="premium" className="w-full text-center text-xs cursor-pointer py-2.5 flex items-center justify-center gap-1.5">
+                    <span>Draft Stage Correspondence</span>
+                    <ArrowRight className="h-3 w-3 text-black animate-pulse" />
                   </Button>
 
                   {generatedDraft && (
@@ -370,13 +729,14 @@ export const AIDesignDirectorPage: React.FC = () => {
                   <div className="pt-4 border-t border-[#D4A65A]/10 mt-4">
                     <Button 
                       variant="glass" 
-                      className="w-full text-center text-[10px] cursor-pointer"
+                      className="w-full text-center text-[10px] cursor-pointer flex items-center justify-center gap-1.5"
                       onClick={() => {
                         navigator.clipboard.writeText(generatedDraft);
                         addToast('Draft Copied', 'Message stored to clipboard.', 'success');
                       }}
                     >
-                      Copy Draft To Clipboard
+                      <span>Copy Draft To Clipboard</span>
+                      <ArrowRight className="h-3 w-3 text-[#D4A65A]" />
                     </Button>
                   </div>
                 )}
@@ -384,7 +744,9 @@ export const AIDesignDirectorPage: React.FC = () => {
 
               {/* Safeguard & Recipe Insights */}
               <GlassCard hoverEffect={false} className="p-6 bg-[#141414]/30 border-[#D4A65A]/10 shadow-soft-luxe space-y-4 text-left">
-                <span className="text-[9px] font-mono text-[#D4A65A] tracking-widest uppercase block border-b border-[#D4A65A]/10 pb-2">Director Insight Board</span>
+                <span className="text-[9px] font-mono text-[#D4A65A] tracking-widest uppercase flex items-center gap-2 border-b border-[#D4A65A]/10 pb-2">
+                  <Palette className="h-3.5 w-3.5" /> Director Insight Board
+                </span>
                 <div className="space-y-3 text-xs text-[#A9A9A9] font-light">
                   <div className="flex justify-between items-start gap-4">
                     <span>Recipe:</span>
@@ -403,9 +765,22 @@ export const AIDesignDirectorPage: React.FC = () => {
 
           </div>
         ) : (
-          <div className="text-center py-20 text-[#A9A9A9] text-xs font-display">
-            Please select a client from the dropdown menu to trigger the AI Design Director.
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center text-center py-24 px-6 max-w-md mx-auto space-y-6"
+          >
+            <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-[#141414] border border-[#D4A65A]/15 shadow-soft-luxe text-[#D4A65A]/40">
+              <Inbox className="w-6 h-6" />
+              <div className="absolute inset-0 rounded-full border border-[#D4A65A]/5 animate-ping opacity-30" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-serif text-white tracking-wide">Select Client Sourcing Profile</h3>
+              <p className="text-xs text-[#A9A9A9] font-light leading-relaxed max-w-xs">
+                Choose an active profile from the portfolio selector above to unlock the neural recommendation engine.
+              </p>
+            </div>
+          </motion.div>
         )}
       </div>
     </div>

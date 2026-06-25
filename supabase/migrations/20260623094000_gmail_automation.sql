@@ -17,9 +17,11 @@ CREATE TABLE IF NOT EXISTS public.email_logs (
 -- Enable RLS on email_logs
 ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all operations on email_logs" ON public.email_logs;
 CREATE POLICY "Allow all operations on email_logs" ON public.email_logs
     FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "anon_all_email_logs" ON public.email_logs;
 CREATE POLICY "anon_all_email_logs" ON public.email_logs
     FOR ALL USING (true) WITH CHECK (true);
 
@@ -36,9 +38,11 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
 -- Enable RLS on email_templates
 ALTER TABLE public.email_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all operations on email_templates" ON public.email_templates;
 CREATE POLICY "Allow all operations on email_templates" ON public.email_templates
     FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "anon_all_email_templates" ON public.email_templates;
 CREATE POLICY "anon_all_email_templates" ON public.email_templates
     FOR ALL USING (true) WITH CHECK (true);
 
@@ -61,8 +65,10 @@ VALUES ('client-documents', 'client-documents', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Policies for client-documents storage objects
+DROP POLICY IF EXISTS "Public Read Access" ON storage.objects;
 CREATE POLICY "Public Read Access" ON storage.objects 
     FOR SELECT USING (bucket_id = 'client-documents');
 
+DROP POLICY IF EXISTS "Allow all operations" ON storage.objects;
 CREATE POLICY "Allow all operations" ON storage.objects 
     FOR ALL USING (bucket_id = 'client-documents') WITH CHECK (bucket_id = 'client-documents');

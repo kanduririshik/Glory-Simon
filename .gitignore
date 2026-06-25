@@ -38,4 +38,10 @@ Frontend/
 Backend/
 Deployment/
 
+# Vite cache
+.vite
+
+# Supabase temp files
+supabase/.temp
+
 

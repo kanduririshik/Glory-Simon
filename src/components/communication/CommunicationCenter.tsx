@@ -60,8 +60,12 @@ export const CommunicationCenter: React.FC = () => {
     uploadDocument,
     siteVisits,
     quotations,
-    createSiteVisit
+    createSiteVisit,
+    selectedEnquiryId: contextEnquiryId,
+    setSelectedEnquiryId
   } = useCRM();
+  
+  const selectedEnquiryId = contextEnquiryId || '';
   
   const { notifications, addToast } = useNotifications();
   
@@ -95,7 +99,7 @@ export const CommunicationCenter: React.FC = () => {
   }, [enquiries, globalFilter, portalRole, profiles]);
 
   // Sending State
-  const [selectedEnquiryId, setSelectedEnquiryId] = useState('');
+  // selectedEnquiryId is synced with CRMContext
   const [channel, setChannel] = useState<'WhatsApp' | 'Email' | 'Notifications' | 'Quotations' | 'Invoices'>('WhatsApp');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [messageContent, setMessageContent] = useState('');
@@ -924,9 +928,9 @@ export const CommunicationCenter: React.FC = () => {
                       <User className="h-4.5 w-4.5 text-[#D4A65A]" />
                     </div>
                     
-                    <div className="text-left">
-                      <h4 className="text-xs font-bold text-[#F5F1EA]">{selectedEnquiry?.clientName}</h4>
-                      <p className="text-[9.5px] text-[#CBBEAB]/70 font-mono tracking-wide">{selectedEnquiry?.email}</p>
+                    <div className="text-left min-w-0">
+                      <h4 className="text-xs font-bold text-[#F5F1EA] truncate max-w-[120px] sm:max-w-[200px]">{selectedEnquiry?.clientName}</h4>
+                      <p className="text-[9.5px] text-[#CBBEAB]/70 font-mono tracking-wide truncate max-w-[150px] sm:max-w-[250px]">{selectedEnquiry?.email}</p>
                     </div>
                   </div>
 
@@ -1759,25 +1763,38 @@ export const CommunicationCenter: React.FC = () => {
                 <ChevronDown className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-[#D4A65A] pointer-events-none" />
               </div>
             </div>
-
             {/* Audit Table grid */}
             <div className="overflow-x-auto rounded-xl border border-[#D4A65A]/15 bg-[#050505]">
               <table className="w-full text-left text-xs border-collapse font-sans">
                 <thead>
                   <tr className="border-b border-[#D4A65A]/25 bg-[#111111] text-[#D4A65A] font-mono uppercase tracking-wider text-[9px]">
                     <th className="p-4">Client</th>
-                    <th className="p-4 w-28">Channel</th>
+                    <th className="p-4 w-28 hidden sm:table-cell">Channel</th>
                     <th className="p-4">Subject / Dispatch Preview</th>
                     <th className="p-4 w-32">Status</th>
-                    <th className="p-4 w-36 text-right font-mono">Date</th>
+                    <th className="p-4 w-36 text-right font-mono hidden md:table-cell">Date</th>
                     <th className="p-4 w-24 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D4A65A]/10 text-[#EAE3D8]">
                   {paginatedLogs.map(log => (
                     <tr key={log.id} className="hover:bg-[#D4A65A]/2 transition-colors">
-                      <td className="p-4 font-bold text-[#F5F1EA]">{log.clientName}</td>
-                      <td className="p-4">
+                      <td className="p-4 font-bold text-[#F5F1EA]">
+                        <div>{log.clientName}</div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1 sm:hidden">
+                          <span className={`px-1.5 py-0.2 rounded text-[7.5px] font-mono uppercase font-bold tracking-wider ${
+                            log.type === 'WhatsApp' 
+                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-amber-950/40 text-[#E6C27A] border border-[#D4A65A]/20'
+                          }`}>
+                            {log.type}
+                          </span>
+                          <span className="text-[8px] text-[#CBBEAB]/50 font-mono">
+                            {new Date(log.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 hidden sm:table-cell">
                         <span className={`px-2 py-0.5 rounded text-[8px] font-mono uppercase font-bold tracking-wider ${
                           log.type === 'WhatsApp' 
                             ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/20' 
@@ -1786,7 +1803,7 @@ export const CommunicationCenter: React.FC = () => {
                           {log.type}
                         </span>
                       </td>
-                      <td className="p-4 max-w-[280px] truncate text-[#CBBEAB]" title={log.content}>
+                      <td className="p-4 max-w-[140px] sm:max-w-[280px] truncate text-[#CBBEAB]" title={log.content}>
                         {log.type === 'Email' ? (
                           <span>
                             <strong className="text-white mr-1">[Email]</strong> 
@@ -1819,7 +1836,7 @@ export const CommunicationCenter: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="p-4 text-right text-[#CBBEAB]/70 font-mono">
+                      <td className="p-4 text-right text-[#CBBEAB]/70 font-mono hidden md:table-cell">
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
                       <td className="p-4 text-center">

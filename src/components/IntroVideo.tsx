@@ -102,7 +102,7 @@ export function IntroVideo({ onComplete }: IntroVideoProps) {
       {/* Fullscreen Video */}
       <video
         ref={videoRef}
-        src="/intro.mp4"
+        src={`${import.meta.env.BASE_URL}intro.mp4`}
         autoPlay
         muted={isMuted}
         playsInline

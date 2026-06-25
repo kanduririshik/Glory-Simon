@@ -585,7 +585,7 @@ export const DashboardPage: React.FC<{
                 <p className="text-xs text-[#A9A9A9] font-light leading-relaxed text-left">
                   {featuredProject.description}
                 </p>
-                <div className="grid grid-cols-3 gap-6 border-t border-[#D4A65A]/10 pt-6 text-left font-display">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 border-t border-[#D4A65A]/10 pt-6 text-left font-display">
                   <div>
                     <span className="text-[8px] text-[#A9A9A9] block uppercase font-mono tracking-widest">Client Account</span>
                     <span className="text-xs font-semibold text-white mt-1.5 block">{featuredProject.client}</span>

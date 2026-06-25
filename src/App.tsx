@@ -126,7 +126,7 @@ export default function App() {
         <NotificationProvider>
           <CRMProvider>
             <AIProvider>
-              <BrowserRouter>
+              <BrowserRouter basename={import.meta.env.BASE_URL}>
                 <AuthenticatedApp />
                 {introActive && (
                   <IntroVideo onComplete={() => setIntroActive(false)} />

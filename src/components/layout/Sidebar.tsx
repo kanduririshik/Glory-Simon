@@ -36,8 +36,16 @@ const NAV_ITEMS = [
   { path: '/settings', label: 'Settings', icon: Settings, color: '#D4A65A' },
 ];
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+  isMobile?: boolean;
+}
+
+export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: SidebarProps) {
+  const [localCollapsed, setLocalCollapsed] = useState(false);
+  const collapsed = propCollapsed !== undefined ? propCollapsed : localCollapsed;
+  
   const location = useLocation();
   const { currentUser } = useCRM();
 
@@ -45,9 +53,12 @@ export function Sidebar() {
   const allowedPaths = ROLE_NAV_MAP[currentRole] || ROLE_NAV_MAP['Admin'];
   const filteredNavItems = NAV_ITEMS.filter(item => allowedPaths.includes(item.path));
 
+  const width = isMobile ? 264 : (collapsed ? 72 : 264);
+  const x = isMobile && collapsed ? -264 : 0;
+
   return (
     <motion.aside
-      animate={{ width: collapsed ? 72 : 264 }}
+      animate={{ width, x }}
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       className="fixed left-0 top-0 h-screen z-40 flex flex-col border-r border-[#D4A65A]/15 bg-[#0A0A0A] shadow-[4px_0_24px_rgba(0,0,0,0.5)]"
     >
@@ -140,14 +151,16 @@ export function Sidebar() {
             <span className="truncate font-sans font-medium text-[#F5F1EA]">Glory Simon (Admin)</span>
           </div>
         )}
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.04] text-[#CBBEAB] hover:text-[#F5F1EA] transition-colors cursor-pointer"
-        >
-          <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.35 }}>
-            <ChevronLeft className="h-5 w-5" />
-          </motion.div>
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => onToggle ? onToggle() : setLocalCollapsed(c => !c)}
+            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.04] text-[#CBBEAB] hover:text-[#F5F1EA] transition-colors cursor-pointer"
+          >
+            <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.35 }}>
+              <ChevronLeft className="h-5 w-5" />
+            </motion.div>
+          </button>
+        )}
       </div>
     </motion.aside>
   );

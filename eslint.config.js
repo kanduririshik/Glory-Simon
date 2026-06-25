@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'Backend/**', 'Frontend/**', 'Deployment/**', 'supabase/**', 'supabase_backup/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -17,6 +17,10 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+        project: ['./tsconfig.app.json', './tsconfig.node.json'],
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',

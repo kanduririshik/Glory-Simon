@@ -22,14 +22,14 @@ CREATE POLICY "Allow Admin operations on clients" ON public.clients
     USING (
         EXISTS (
             SELECT 1 FROM public.user_profiles
-            WHERE user_profiles.id = auth.uid()
+            WHERE user_profiles.id = auth.uid()::text
               AND user_profiles.role = 'Admin'
         )
     )
     WITH CHECK (
         EXISTS (
             SELECT 1 FROM public.user_profiles
-            WHERE user_profiles.id = auth.uid()
+            WHERE user_profiles.id = auth.uid()::text
               AND user_profiles.role = 'Admin'
         )
     );

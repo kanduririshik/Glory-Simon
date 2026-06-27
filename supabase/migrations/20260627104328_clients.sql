@@ -36,7 +36,6 @@ CREATE POLICY "Allow Admin operations on clients" ON public.clients
 
 -- Automatically confirm the admin user's email in auth.users
 UPDATE auth.users
-SET email_confirmed_at = NOW(),
-    confirmed_at = NOW()
+SET email_confirmed_at = NOW()
 WHERE email = 'admin@glorysimon.com';
 

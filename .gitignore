@@ -45,3 +45,4 @@ Deployment/
 supabase/.temp
 
 
+.env*

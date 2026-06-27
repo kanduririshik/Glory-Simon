@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Kanban, Calendar, FileText, Palette,
-  Sparkles, MessageSquare, FolderKanban, BarChart3, Settings, ChevronLeft,
+  Sparkles, MessageSquare, FolderKanban, BarChart3, Settings,
   Contact, LogOut
 } from 'lucide-react';
 import { useCRM } from '@/context/CRMContext';
@@ -45,9 +45,8 @@ interface SidebarProps {
   isMobile?: boolean;
 }
 
-export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: SidebarProps) {
-  const [localCollapsed, setLocalCollapsed] = useState(false);
-  const collapsed = propCollapsed !== undefined ? propCollapsed : localCollapsed;
+export function Sidebar({ collapsed: propCollapsed, onToggle: _onToggle, isMobile }: SidebarProps) {
+  const [isHovered, setIsHovered] = useState(false);
   
   const location = useLocation();
   const { currentUser } = useCRM();
@@ -57,11 +56,16 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
   const allowedPaths = ROLE_NAV_MAP[currentRole] || ROLE_NAV_MAP['Admin'];
   const filteredNavItems = NAV_ITEMS.filter(item => allowedPaths.includes(item.path));
 
-  const width = isMobile ? 264 : (collapsed ? 72 : 264);
-  const x = isMobile && collapsed ? -264 : 0;
+  const isExpanded = isMobile ? !propCollapsed : isHovered;
+  const collapsed = !isExpanded;
+
+  const width = isMobile ? 264 : (isExpanded ? 264 : 72);
+  const x = isMobile && propCollapsed ? -264 : 0;
 
   return (
     <motion.aside
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
       animate={{ width, x }}
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       className="fixed left-0 top-0 h-screen z-40 flex flex-col border-r border-[#D4A65A]/15 bg-[#0A0A0A] shadow-[4px_0_24px_rgba(0,0,0,0.5)]"
@@ -175,16 +179,6 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
               <LogOut className="h-5 w-5" />
             </button>
           </div>
-        )}
-        {!isMobile && (
-          <button
-            onClick={() => onToggle ? onToggle() : setLocalCollapsed(c => !c)}
-            className="w-full flex items-center justify-center p-2 rounded-xl hover:bg-white/[0.04] text-[#CBBEAB] hover:text-[#F5F1EA] transition-colors cursor-pointer"
-          >
-            <motion.div animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.35 }}>
-              <ChevronLeft className="h-5 w-5" />
-            </motion.div>
-          </button>
         )}
       </div>
     </motion.aside>

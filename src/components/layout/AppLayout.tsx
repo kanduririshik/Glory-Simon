@@ -6,7 +6,7 @@ import { Menu } from 'lucide-react';
 
 export function AppLayout() {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function AppLayout() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const sidebarWidth = isMobile ? 0 : (collapsed ? 72 : 264);
+  const sidebarWidth = isMobile ? 0 : 72;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex overflow-hidden">

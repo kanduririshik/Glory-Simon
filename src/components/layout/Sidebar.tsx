@@ -66,7 +66,7 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       className="fixed left-0 top-0 h-screen z-40 flex flex-col border-r border-[#D4A65A]/15 bg-[#0A0A0A] shadow-[4px_0_24px_rgba(0,0,0,0.5)]"
     >
-      <div className="p-4 flex items-center gap-3 overflow-hidden">
+      <div className="h-16 shrink-0 px-4 flex items-center gap-3 bg-[#0A0A0A] border-b border-[#D4A65A]/10 z-10 overflow-hidden">
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
@@ -108,7 +108,7 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
         </AnimatePresence>
       </div>
 
-      <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
+      <nav className="flex-grow px-2 py-2 space-y-0.5 overflow-y-auto min-h-0">
         {filteredNavItems.map((item, i) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -123,7 +123,7 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
                 <motion.div
                   whileHover={{ x: 3, transition: { duration: 0.15 } }}
                   whileTap={{ scale: 0.97 }}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors border ${
+                  className={`relative flex items-center gap-3 px-3 py-2 rounded-xl transition-colors border ${
                     isActive 
                       ? 'text-[#F5F1EA] bg-[#D4A65A]/10 border-[#D4A65A]/25' 
                       : 'text-[#CBBEAB] hover:text-[#F5F1EA] hover:bg-[#D4A65A]/5 border-transparent'
@@ -148,7 +148,7 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
         })}
       </nav>
 
-      <div className="p-3 border-t border-[#D4A65A]/10 space-y-2">
+      <div className="shrink-0 p-3 bg-[#0A0A0A] border-t border-[#D4A65A]/10 z-10 space-y-2">
         {!collapsed ? (
           <div className="flex items-center justify-between gap-2">
             <div className="px-2 py-1.5 flex items-center justify-start gap-2.5 text-xs text-[#CBBEAB] min-w-0">

@@ -14,6 +14,7 @@ import { AIProvider } from '@/context/AIContext';
 
 // Import Premium Gold UI Pages
 import DashboardPage from '@/pages/DashboardPage';
+import ClientManagementPage from '@/pages/ClientManagementPage';
 import EnquiriesPage from '@/pages/EnquiriesPage';
 import PipelinePage from '@/pages/PipelinePage';
 import SiteVisitsPage from '@/pages/SiteVisitsPage';
@@ -24,6 +25,7 @@ import CommunicationPage from '@/pages/CommunicationPage';
 import ProjectHubPage from '@/pages/ProjectHubPage';
 import ReportsPage from '@/pages/ReportsPage';
 import SettingsPage from '@/pages/SettingsPage';
+import LoginPage from '@/pages/LoginPage';
 
 import PageNotFound from '@/pages/PageNotFound';
 
@@ -62,6 +64,8 @@ function AuthenticatedRoutes() {
         }
       >
         <Route index element={<DashboardPage onNavigate={handleNavigate} onSelectEnquiry={(id) => setSelectedEnquiryId(id)} />} />
+        <Route path="clients" element={<ClientManagementPage />} />
+        <Route path="dashboard" element={<Navigate to="/" replace />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
         <Route path="pipeline" element={<PipelinePage onSelectEnquiry={(id) => { setSelectedEnquiryId(id); navigate('/enquiries'); }} />} />
         <Route path="site-visits" element={<SiteVisitsPage />} />
@@ -79,7 +83,7 @@ function AuthenticatedRoutes() {
 }
 
 function AuthenticatedApp() {
-  const { isLoadingAuth, authError } = useAuth();
+  const { user, isLoadingAuth, authError } = useAuth();
 
   if (isLoadingAuth) {
     return (
@@ -103,7 +107,7 @@ function AuthenticatedApp() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="/forgot-password" element={<Navigate to="/" replace />} />
       <Route path="/reset-password" element={<Navigate to="/" replace />} />

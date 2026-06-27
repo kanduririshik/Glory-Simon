@@ -27,6 +27,7 @@ import type {
   LeadStatus,
   EmailLog,
   EmailTemplate,
+  Client,
 } from '../types';
 
 // ─────────────────────────────────────────────────────────────
@@ -153,6 +154,18 @@ interface EmailTemplateRow {
   name: string;
   subject: string;
   body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ClientRow {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  status: string;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -300,6 +313,18 @@ const mapEmailTemplate = (r: EmailTemplateRow): EmailTemplate => ({
   updatedAt: r.updated_at,
 });
 
+const mapClient = (r: ClientRow): Client => ({
+  id: r.id,
+  fullName: r.full_name,
+  email: r.email,
+  phone: r.phone ?? undefined,
+  company: r.company ?? undefined,
+  status: r.status as Client['status'],
+  notes: r.notes ?? undefined,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
 // ─────────────────────────────────────────────────────────────
 // Helper: throw a readable error from a Supabase response or gracefully fallback
 // ─────────────────────────────────────────────────────────────
@@ -432,7 +457,18 @@ export class SupabaseCRMService implements ICRMService {
   // ── Auth ──────────────────────────────────────────────────
 
   async getCurrentUser(): Promise<UserProfile> {
-    // Single admin: always run as Glory Simon (role: 'Admin')
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.user) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        return mapProfile(profile as UserProfileRow);
+      }
+    }
     return {
       id: 'p1',
       fullName: 'Glory Simon',
@@ -488,6 +524,61 @@ export class SupabaseCRMService implements ICRMService {
       .delete()
       .eq('id', id);
     if (error) throw new Error(`[Supabase] deleteProfile: ${error.message}`);
+    return true;
+  }
+
+  // ── Clients ──────────────────────────────────────────────
+
+  async getClients(): Promise<Client[]> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+    return assertOk(data, error, 'getClients', [] as unknown as ClientRow[]).map((r: any) => mapClient(r as ClientRow));
+  }
+
+  async createClient(client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Promise<Client> {
+    const row = {
+      full_name: client.fullName,
+      email: client.email,
+      phone: client.phone || null,
+      company: client.company || null,
+      status: client.status,
+      notes: client.notes || null,
+    };
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(row)
+      .select()
+      .single();
+    return mapClient(assertOk(data, error, 'createClient') as ClientRow);
+  }
+
+  async updateClient(id: string, updates: Partial<Client>): Promise<Client> {
+    const row: Record<string, any> = {};
+    if (updates.fullName !== undefined) row.full_name = updates.fullName;
+    if (updates.email !== undefined)    row.email     = updates.email;
+    if (updates.phone !== undefined)    row.phone     = updates.phone || null;
+    if (updates.company !== undefined)  row.company   = updates.company || null;
+    if (updates.status !== undefined)   row.status    = updates.status;
+    if (updates.notes !== undefined)    row.notes     = updates.notes || null;
+    row.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('clients')
+      .update(row)
+      .eq('id', id)
+      .select()
+      .single();
+    return mapClient(assertOk(data, error, 'updateClient') as ClientRow);
+  }
+
+  async deleteClient(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error(`[Supabase] deleteClient: ${error.message}`);
     return true;
   }
 
@@ -1194,6 +1285,7 @@ export class SupabaseCRMService implements ICRMService {
           .on('postgres_changes', { event: '*', schema: 'public', table: 'communication_logs' }, () => this._notify())
           .on('postgres_changes', { event: '*', schema: 'public', table: 'email_logs' }, () => this._notify())
           .on('postgres_changes', { event: '*', schema: 'public', table: 'email_templates' }, () => this._notify())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => this._notify())
           .subscribe((status: any, err: any) => {
             if (status === 'SUBSCRIBED') {
               console.log('SUPABASE REALTIME: Successfully subscribed to database changes.');

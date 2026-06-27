@@ -3,12 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Kanban, Calendar, FileText, Palette,
-  Sparkles, MessageSquare, FolderKanban, BarChart3, Settings, ChevronLeft
+  Sparkles, MessageSquare, FolderKanban, BarChart3, Settings, ChevronLeft,
+  Contact, LogOut
 } from 'lucide-react';
 import { useCRM } from '@/context/CRMContext';
+import { useAuth } from '@/lib/AuthContext';
 
 const ROLE_NAV_MAP: Record<string, string[]> = {
-  'Admin': ['/', '/enquiries', '/pipeline', '/site-visits', '/quotations', '/design-studio', '/ai-director', '/messages', '/projects', '/reports', '/settings'],
+  'Admin': ['/', '/clients', '/enquiries', '/pipeline', '/site-visits', '/quotations', '/design-studio', '/ai-director', '/messages', '/projects', '/reports', '/settings'],
   'Design Consultant': ['/', '/enquiries', '/pipeline', '/quotations', '/messages', '/settings'],
   'Interior Designer': ['/', '/design-studio', '/ai-director', '/projects', '/messages', '/settings'],
   'Site Engineer': ['/', '/site-visits', '/projects', '/messages', '/settings'],
@@ -24,6 +26,7 @@ const ROLE_NAV_MAP: Record<string, string[]> = {
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, color: '#D4A65A' },
+  { path: '/clients', label: 'Clients', icon: Contact, color: '#D4A65A' },
   { path: '/enquiries', label: 'Enquiries', icon: Users, color: '#D4A65A' },
   { path: '/pipeline', label: 'Pipeline', icon: Kanban, color: '#D4A65A' },
   { path: '/site-visits', label: 'Site Visits', icon: Calendar, color: '#D4A65A' },
@@ -48,6 +51,7 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
   
   const location = useLocation();
   const { currentUser } = useCRM();
+  const { logout } = useAuth();
 
   const currentRole = currentUser?.role || 'Admin';
   const allowedPaths = ROLE_NAV_MAP[currentRole] || ROLE_NAV_MAP['Admin'];
@@ -145,10 +149,31 @@ export function Sidebar({ collapsed: propCollapsed, onToggle, isMobile }: Sideba
       </nav>
 
       <div className="p-3 border-t border-[#D4A65A]/10 space-y-2">
-        {!collapsed && (
-          <div className="px-2 py-1.5 flex items-center justify-start gap-2.5 text-xs text-[#CBBEAB]">
-            <div className="h-2 w-2 rounded-full bg-emerald-500" title="Online" />
-            <span className="truncate font-sans font-medium text-[#F5F1EA]">Glory Simon (Admin)</span>
+        {!collapsed ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="px-2 py-1.5 flex items-center justify-start gap-2.5 text-xs text-[#CBBEAB] min-w-0">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" title="Online" />
+              <span className="truncate font-sans font-medium text-[#F5F1EA]">
+                {currentUser ? `${currentUser.fullName}` : 'Glory Simon'} (Admin)
+              </span>
+            </div>
+            <button
+              onClick={() => logout()}
+              className="p-1.5 rounded-lg hover:bg-rose-500/10 text-[#CBBEAB] hover:text-rose-400 transition-colors cursor-pointer"
+              title="Logout"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => logout()}
+              className="p-2 rounded-xl hover:bg-rose-500/10 text-[#CBBEAB] hover:text-rose-400 transition-colors cursor-pointer"
+              title="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         )}
         {!isMobile && (

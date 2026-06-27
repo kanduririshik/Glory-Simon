@@ -9,7 +9,8 @@ import type {
   AppNotification, 
   AiLog,
   EmailLog,
-  EmailTemplate
+  EmailTemplate,
+  Client
 } from '../types';
 
 // ==========================================
@@ -22,6 +23,12 @@ export interface ICRMService {
   createProfile(profile: Omit<UserProfile, 'createdAt'>): Promise<UserProfile>;
   updateProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile>;
   deleteProfile(id: string): Promise<boolean>;
+  
+  // Clients
+  getClients(): Promise<Client[]>;
+  createClient(client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Promise<Client>;
+  updateClient(id: string, updates: Partial<Client>): Promise<Client>;
+  deleteClient(id: string): Promise<boolean>;
   
   // Enquiries
   getEnquiries(): Promise<Enquiry[]>;

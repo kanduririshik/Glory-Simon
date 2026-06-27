@@ -166,3 +166,18 @@ export interface AppNotification {
   createdAt: string;
   enquiryId?: string;
 }
+
+export type ClientStatus = 'Active' | 'Inactive' | 'Lead' | 'Archived';
+
+export interface Client {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  status: ClientStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/dataService';
+import { useAuth } from '../lib/AuthContext';
 import type { 
   Enquiry, 
   SiteVisit, 
@@ -8,7 +9,8 @@ import type {
   CommunicationLog,
   StatusHistory,
   EmailLog,
-  EmailTemplate
+  EmailTemplate,
+  Client
 } from '../types';
 
 
@@ -21,6 +23,12 @@ interface CRMContextType {
   selectedEnquiryId: string | null;
   setSelectedEnquiryId: (id: string | null) => void;
   isLoading: boolean;
+  
+  // Clients Operations
+  clients: Client[];
+  createClient: (client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Client>;
+  updateClient: (id: string, updates: Partial<Client>) => Promise<Client>;
+  deleteClient: (id: string) => Promise<boolean>;
   
   // Enquiries Operations
   createEnquiry: (enquiry: Omit<Enquiry, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Enquiry>;
@@ -86,14 +94,18 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
-  const [currentUser] = useState<UserProfile | null>({
-    id: 'p1',
-    fullName: 'Glory Simon',
-    email: 'glory@glorysimon.com',
-    role: 'Admin',
+  const [clients, setClients] = useState<Client[]>([]);
+  const { user: authUser } = useAuth();
+  
+  const currentUser: UserProfile | null = authUser ? {
+    id: authUser.id,
+    fullName: authUser.full_name || 'Glory Simon',
+    email: authUser.email,
+    role: authUser.role as UserProfile['role'],
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=60',
-    createdAt: '2025-01-01T00:00:00Z',
-  });
+    createdAt: authUser.created_date || '2025-01-01T00:00:00Z',
+  } : null;
+
   const [selectedEnquiryId, setSelectedEnquiryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -106,7 +118,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         api.getQuotations(),
         api.getProfiles(),
         api.getEmailLogs(),
-        api.getEmailTemplates()
+        api.getEmailTemplates(),
+        api.getClients()
       ]);
 
       if (results[0].status === 'fulfilled') {
@@ -149,6 +162,13 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         console.error('[CRMContext] Failed to load email templates:', results[5].reason);
         setEmailTemplates([]);
+      }
+
+      if (results[6] && results[6].status === 'fulfilled') {
+        setClients(results[6].value);
+      } else {
+        console.error('[CRMContext] Failed to load clients:', results[6]?.reason);
+        setClients([]);
       }
 
     } catch (e) {
@@ -377,6 +397,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createProfile,
       updateProfile,
       deleteProfile,
+      
+      clients,
+      createClient: async (c) => api.createClient(c),
+      updateClient: async (id, upd) => api.updateClient(id, upd),
+      deleteClient: async (id) => api.deleteClient(id),
+      
       metrics: getMetrics()
     }}>
       {children}

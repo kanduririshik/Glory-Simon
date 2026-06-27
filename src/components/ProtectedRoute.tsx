@@ -1,7 +1,8 @@
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isLoadingAuth } = useAuth();
+  const { user, isLoadingAuth } = useAuth();
 
   if (isLoadingAuth) {
     return (
@@ -10,6 +11,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         <p className="text-sm text-muted-foreground">Glory Simon Interiors</p>
       </div>
     );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

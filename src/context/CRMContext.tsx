@@ -399,9 +399,21 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteProfile,
       
       clients,
-      createClient: async (c) => api.createClient(c),
-      updateClient: async (id, upd) => api.updateClient(id, upd),
-      deleteClient: async (id) => api.deleteClient(id),
+      createClient: async (c) => {
+        const client = await api.createClient(c);
+        await loadData();
+        return client;
+      },
+      updateClient: async (id, upd) => {
+        const client = await api.updateClient(id, upd);
+        await loadData();
+        return client;
+      },
+      deleteClient: async (id) => {
+        const success = await api.deleteClient(id);
+        await loadData();
+        return success;
+      },
       
       metrics: getMetrics()
     }}>

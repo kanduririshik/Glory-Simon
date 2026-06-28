@@ -203,6 +203,7 @@ export interface Client {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  assignedStaffId?: string;
 }
 
 

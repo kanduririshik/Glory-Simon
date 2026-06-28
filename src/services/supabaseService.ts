@@ -168,6 +168,7 @@ interface ClientRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  assigned_staff_id: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -323,6 +324,7 @@ const mapClient = (r: ClientRow): Client => ({
   notes: r.notes ?? undefined,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
+  assignedStaffId: r.assigned_staff_id ?? undefined,
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -545,6 +547,7 @@ export class SupabaseCRMService implements ICRMService {
       company: client.company || null,
       status: client.status,
       notes: client.notes || null,
+      assigned_staff_id: client.assignedStaffId || null,
     };
     const { data, error } = await supabase
       .from('clients')
@@ -562,6 +565,7 @@ export class SupabaseCRMService implements ICRMService {
     if (updates.company !== undefined)  row.company   = updates.company || null;
     if (updates.status !== undefined)   row.status    = updates.status;
     if (updates.notes !== undefined)    row.notes     = updates.notes || null;
+    if (updates.assignedStaffId !== undefined) row.assigned_staff_id = updates.assignedStaffId || null;
     row.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase

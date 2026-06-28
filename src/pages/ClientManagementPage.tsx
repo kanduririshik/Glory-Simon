@@ -4,6 +4,8 @@ import { useCRM } from '@/context/CRMContext';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/Card';
 import { useNotifications } from '@/context/NotificationContext';
+import { TeamSelector } from '@/components/ui/TeamSelector';
+import { ProfileCard } from '@/components/ui/ProfileCard';
 import { 
   Search, 
   UserPlus, 
@@ -20,7 +22,7 @@ import {
 import type { Client, ClientStatus } from '@/types';
 
 export const ClientManagementPage: React.FC = () => {
-  const { clients, createClient, updateClient, deleteClient, isLoading } = useCRM();
+  const { clients, createClient, updateClient, deleteClient, isLoading, profiles, createEnquiry, enquiries, updateEnquiry } = useCRM();
   const { addToast } = useNotifications();
 
   // Search & Filter State
@@ -42,10 +44,11 @@ export const ClientManagementPage: React.FC = () => {
   const [company, setCompany] = useState('');
   const [status, setStatus] = useState<ClientStatus>('Active');
   const [notes, setNotes] = useState('');
+  const [assignedStaffId, setAssignedStaffId] = useState('');
   
   const [formError, setFormError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-
+  
   // Filter clients
   const filteredClients = useMemo(() => {
     return clients.filter(c => {
@@ -68,6 +71,7 @@ export const ClientManagementPage: React.FC = () => {
     setCompany('');
     setStatus('Active');
     setNotes('');
+    setAssignedStaffId(profiles[0]?.id || '');
     setFormError('');
     setIsCreateOpen(true);
   };
@@ -80,6 +84,7 @@ export const ClientManagementPage: React.FC = () => {
     setCompany(client.company || '');
     setStatus(client.status);
     setNotes(client.notes || '');
+    setAssignedStaffId(client.assignedStaffId || (profiles[0]?.id || ''));
     setFormError('');
     setIsEditOpen(true);
   };
@@ -114,23 +119,58 @@ export const ClientManagementPage: React.FC = () => {
       setFormError('Name and Email are required.');
       return;
     }
+
+    // Check if email already exists
+    const emailExists = (clients || []).some(
+      c => c.email.trim().toLowerCase() === email.trim().toLowerCase()
+    );
+    if (emailExists) {
+      setFormError('A client with this email address is already registered.');
+      return;
+    }
+
     setFormError('');
     setActionLoading(true);
 
     try {
+      // 1. Create client
       await createClient({
         fullName,
         email,
         phone: phone || undefined,
         company: company || undefined,
         status,
-        notes: notes || undefined
+        notes: notes || undefined,
+        assignedStaffId: assignedStaffId || undefined
       });
+
+      // 2. Create matching project enquiry (so they show up in Client Enquiries Registry)
+      await createEnquiry({
+        clientName: fullName,
+        phoneNumber: phone || '',
+        email: email,
+        companyName: company || '',
+        projectType: 'Home Interior',
+        location: 'TBD',
+        budget: 150000,
+        sqFtArea: 2500,
+        preferredStyle: 'Luxury',
+        requirements: notes || 'Registered from Client Database.',
+        notes: notes || '',
+        leadSource: 'Referral',
+        priority: 'Medium',
+        status: 'New Lead', // Default status for Enquiry Registry
+        assignedStaffId: assignedStaffId || undefined
+      });
+
       addToast('Success', `${fullName} has been registered successfully.`, 'success');
       setIsCreateOpen(false);
     } catch (err: any) {
       console.error(err);
-      setFormError(err.message || 'An error occurred while creating client.');
+      const isDuplicate = err.message?.toLowerCase().includes('duplicate key') || 
+                          err.message?.toLowerCase().includes('clients_email_key') ||
+                          err.message?.toLowerCase().includes('unique constraint');
+      setFormError(isDuplicate ? 'A client with this email address is already registered.' : (err.message || 'An error occurred while creating client.'));
     } finally {
       setActionLoading(false);
     }
@@ -143,23 +183,54 @@ export const ClientManagementPage: React.FC = () => {
       setFormError('Name and Email are required.');
       return;
     }
+
+    // Check if email already exists for another client
+    const emailExists = (clients || []).some(
+      c => c.email.trim().toLowerCase() === email.trim().toLowerCase() && c.id !== selectedClient.id
+    );
+    if (emailExists) {
+      setFormError('A client with this email address is already registered.');
+      return;
+    }
+
     setFormError('');
     setActionLoading(true);
 
     try {
+      // 1. Update client
       await updateClient(selectedClient.id, {
         fullName,
         email,
         phone: phone || undefined,
         company: company || undefined,
         status,
-        notes: notes || undefined
+        notes: notes || undefined,
+        assignedStaffId: assignedStaffId || undefined
       });
+
+      // 2. Update matching project enquiry if found
+      const matchingEnquiry = (enquiries || []).find(
+        e => e.email.toLowerCase() === selectedClient.email.toLowerCase() || 
+             e.clientName.toLowerCase() === selectedClient.fullName.toLowerCase()
+      );
+      if (matchingEnquiry) {
+        await updateEnquiry(matchingEnquiry.id, {
+          clientName: fullName,
+          email: email,
+          phoneNumber: phone || '',
+          companyName: company || '',
+          assignedStaffId: assignedStaffId || undefined
+        });
+      }
+
       addToast('Success', `Client details for ${fullName} updated successfully.`, 'success');
       setIsEditOpen(false);
     } catch (err: any) {
       console.error(err);
-      setFormError(err.message || 'An error occurred while updating client.');
+      const isDuplicate = err.message?.toLowerCase().includes('duplicate key') || 
+                          err.message?.toLowerCase().includes('clients_email_key') ||
+                          err.message?.toLowerCase().includes('unique constraint');
+      setFormError(isDuplicate ? 'A client with this email address is already registered.' : (err.message || 'An error occurred while updating client.'));
     } finally {
       setActionLoading(false);
     }
@@ -396,6 +467,20 @@ export const ClientManagementPage: React.FC = () => {
                   <option value="Archived">Archived</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#CBBEAB] uppercase tracking-wider font-medium">Assigned Team Member *</label>
+                <TeamSelector
+                  profiles={profiles}
+                  selectedId={assignedStaffId}
+                  onChange={(id) => setAssignedStaffId(id)}
+                  placeholder="Choose team member to assign..."
+                />
+                {assignedStaffId && (
+                  <div className="mt-2">
+                    <ProfileCard profile={profiles.find((p) => p.id === assignedStaffId)} />
+                  </div>
+                )}
+              </div>
               <div className="space-y-1">
                 <label className="text-xs text-[#CBBEAB] uppercase tracking-wider font-medium">Internal Notes</label>
                 <textarea
@@ -489,6 +574,20 @@ export const ClientManagementPage: React.FC = () => {
                   <option value="Archived">Archived</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-[#CBBEAB] uppercase tracking-wider font-medium">Assigned Team Member *</label>
+                <TeamSelector
+                  profiles={profiles}
+                  selectedId={assignedStaffId}
+                  onChange={(id) => setAssignedStaffId(id)}
+                  placeholder="Choose team member to assign..."
+                />
+                {assignedStaffId && (
+                  <div className="mt-2">
+                    <ProfileCard profile={profiles.find((p) => p.id === assignedStaffId)} />
+                  </div>
+                )}
+              </div>
               <div className="space-y-1">
                 <label className="text-xs text-[#CBBEAB] uppercase tracking-wider font-medium">Internal Notes</label>
                 <textarea
@@ -581,6 +680,13 @@ export const ClientManagementPage: React.FC = () => {
                   <div className="p-3.5 rounded-xl border border-[#D4A65A]/10 bg-white/[0.01] space-y-1">
                     <span className="text-[10px] text-[#CBBEAB]/60 uppercase tracking-widest font-sans block">Client Notes</span>
                     <p className="text-xs text-[#CBBEAB] font-sans leading-relaxed whitespace-pre-wrap">{selectedClient.notes}</p>
+                  </div>
+                )}
+
+                {selectedClient.assignedStaffId && (
+                  <div className="pt-4 border-t border-[#D4A65A]/10 space-y-2 text-left">
+                    <span className="text-[10px] text-[#CBBEAB]/60 uppercase tracking-widest font-sans block">Assigned Owner</span>
+                    <ProfileCard profile={profiles.find((p) => p.id === selectedClient.assignedStaffId)} />
                   </div>
                 )}
               </div>

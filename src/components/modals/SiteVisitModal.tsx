@@ -32,7 +32,12 @@ export function SiteVisitModal({ open, onClose, onSave, visit }: Props) {
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} className="relative w-full max-w-lg rounded-2xl glass-strong p-6 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl glass-strong p-6 space-y-4"
+        >
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">{visit ? 'Edit Visit' : 'Schedule Visit'}</h2>
             <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/[0.06] cursor-pointer"><X className="h-5 w-5" /></button>

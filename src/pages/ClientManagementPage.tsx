@@ -396,7 +396,7 @@ export const ClientManagementPage: React.FC = () => {
       {/* CREATE CLIENT MODAL */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <GlassCard className="w-full max-w-lg p-6 md:p-8 relative" hoverEffect={false}>
+          <GlassCard className="w-full max-w-lg p-6 md:p-8 relative max-h-[90vh] overflow-y-auto" hover={false}>
             <button className="absolute top-4 right-4 text-[#CBBEAB] hover:text-[#F5F1EA] cursor-pointer" onClick={() => setIsCreateOpen(false)}>
               <X className="h-5 w-5" />
             </button>
@@ -507,7 +507,7 @@ export const ClientManagementPage: React.FC = () => {
       {/* EDIT CLIENT MODAL */}
       {isEditOpen && selectedClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <GlassCard className="w-full max-w-lg p-6 md:p-8 relative" hoverEffect={false}>
+          <GlassCard className="w-full max-w-lg p-6 md:p-8 relative max-h-[90vh] overflow-y-auto" hover={false}>
             <button className="absolute top-4 right-4 text-[#CBBEAB] hover:text-[#F5F1EA] cursor-pointer" onClick={() => setIsEditOpen(false)}>
               <X className="h-5 w-5" />
             </button>

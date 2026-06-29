@@ -633,6 +633,16 @@ export const CommunicationCenter: React.FC = () => {
   const handleScheduleVisit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEnquiryId || !scheduledAt || !selectedEngineerId) return;
+
+    const visitDate = new Date(scheduledAt);
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const visitDateOnly = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
+
+    if (visitDateOnly < todayDate) {
+      addToast('Cannot book past dates', 'You cannot book inspections for past dates.', 'warning');
+      return;
+    }
     
     setIsScheduling(true);
     try {

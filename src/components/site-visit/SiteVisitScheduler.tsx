@@ -28,6 +28,14 @@ export const SiteVisitScheduler: React.FC = () => {
   // Calendar Focus: June 2026
   const monthName = 'June 2026';
 
+  const todayStr = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+
   // Schedule Modal controls
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -135,6 +143,11 @@ export const SiteVisitScheduler: React.FC = () => {
 
   // Click on a calendar day to schedule a visit
   const handleDayClick = (day: number) => {
+    const clickedDateStr = `2026-06-${day.toString().padStart(2, '0')}`;
+    if (clickedDateStr < todayStr) {
+      addToast('Cannot book past dates', 'You cannot book inspections for past dates.', 'warning');
+      return;
+    }
     setSelectedDay(day);
     // Reset form with default engineer
     setFormData({
@@ -292,14 +305,16 @@ export const SiteVisitScheduler: React.FC = () => {
           {calendarDays.map((cell, idx) => {
             const dayVisits = cell.day ? visitsByDate[cell.dateString] || [] : [];
             const hasVisits = dayVisits.length > 0;
+            const isPast = cell.dateString ? cell.dateString < todayStr : false;
+            const isBookable = cell.day && !isPast;
             
             return (
               <div
                 key={idx}
                 className={`bg-[#141414]/40 min-h-[120px] p-2.5 flex flex-col justify-between transition-colors relative group ${
-                  cell.day ? 'hover:bg-[#D4A65A]/10 cursor-pointer' : 'opacity-10 pointer-events-none'
+                  isBookable ? 'hover:bg-[#D4A65A]/10 cursor-pointer' : cell.day ? 'opacity-50 cursor-default' : 'opacity-10 pointer-events-none'
                 }`}
-                onClick={() => cell.day && handleDayClick(cell.day)}
+                onClick={() => isBookable && handleDayClick(cell.day!)}
               >
                 {/* Day Marker */}
                 <div className="flex justify-between items-center">
@@ -308,7 +323,7 @@ export const SiteVisitScheduler: React.FC = () => {
                   }`}>
                     {cell.day}
                   </span>
-                  {cell.day && (
+                  {isBookable && (
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-[#141414]/60 border border-white/5">
                       <Plus className="h-3 w-3 text-slate-400 hover:text-luxe-primary" />
                     </span>
